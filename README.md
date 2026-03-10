@@ -22,12 +22,12 @@ Automatic processing of **text inputs to uppercase** to maintain visual consiste
 ### Adaptive Layout
 Responsive design that transitions:
 
-- **Mobile:** vertical flow layout  
+- **Mobile:** vertical flow layout
 - **Large screens:** dual-column grid system (**L/H Screen**)
 
 ### Visual Optimization
 - Use of **backdrop-blur filters**
-- **Scale transitions** via CSS transforms  
+- **Scale transitions** via CSS transforms
 - Focus on **fluid user interaction**
 
 ---
@@ -40,7 +40,7 @@ Responsive design that transitions:
 - Optimized for **performance and low latency**
 
 ### Tailwind CSS
-Custom configuration extending the project’s visual identity through **design tokens**:
+Custom configuration extending the project's visual identity through **design tokens**:
 
 - Colors
 - Typography
@@ -58,12 +58,18 @@ Custom configuration extending the project’s visual identity through **design 
 # File Architecture
 
 ```
-├── index.html 
-├── src/
-│ └── main.js 
-├── js/
-│ └── tailwind.config.js 
+WeatherApp/
+├── frontend/
+│   ├── index.html
+│   ├── src/
+│   │   └── main.js
+│   └── js/
+│       └── tailwind.config.js
+├── n8n/
+│   └── WeatherApp.json
+└── README.md
 ```
+
 ---
 
 # Design System Configuration
@@ -77,6 +83,42 @@ The project utilizes a **custom color palette** defined within the Tailwind conf
 | `surface` | `#F5F5F5` | Card containers and secondary elements |
 | `accent` | `#FF3300` | Active borders, indicators, and calls to action |
 | `muted` | `#888888` | Low-hierarchy informational text |
+
+---
+
+# n8n Workflow
+
+The backend intelligence is handled by an **n8n automation workflow** (`n8n/WeatherApp.json`) that executes the following pipeline:
+
+| Step | Node | Description |
+|---|---|---|
+| 1 | Webhook | Receives trigger from frontend |
+| 2 | DatosClima | Fetches current weather from Open-Meteo API |
+| 3 | Filtrar y juntar datos | Converts data to compact TOON format |
+| 4 | Message a model | Sends TOON data to Gemini 2.5 Flash |
+| 5 | Formatear a JSON | Structures LLM response + weather data |
+| 6 | POST | Returns payload to frontend |
+
+### Workflow Response Schema
+
+```json
+{
+  "recommendedClothes": "string",
+  "weatherConditions": {
+    "temperature": "number",
+    "feelsLike": "number",
+    "humidity": "number",
+    "rain": "number",
+    "showers": "number",
+    "snowfall": "number",
+    "cloudCover": "number",
+    "windSpeed": "number",
+    "windGusts": "number",
+    "isDay": "boolean"
+  },
+  "temperature": "number"
+}
+```
 
 ---
 
@@ -95,11 +137,3 @@ The modal can be dismissed via:
 - The **[ESC] button**
 - The **Escape key**
 - Clicking the **overlay area outside the modal**
-
----
-
-# Future Implementation
-
-- **Real-time geolocation API integration**
-- Connection with **dynamic meteorological data services (OpenWeather API)**
-- **User preference persistence** via `LocalStorage`

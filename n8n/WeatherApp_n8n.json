@@ -1,0 +1,184 @@
+{
+  "name": "WeatherApp/n8n",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "7df577f9-a4fb-469a-a9ac-cb6a3d160f9e",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -432,
+        -256
+      ],
+      "id": "48c4dbae-d505-4b8b-b189-25728665ee09",
+      "name": "Webhook",
+      "webhookId": "7df577f9-a4fb-469a-a9ac-cb6a3d160f9e"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres asistente de clima. Datos posicionales (sin unidades, en orden):\nT°C,AT°C,H%,D,Rmm,SHmm,SNcm,CC%,WSkm/h,WGkm/h\n\nResponde en español con:\n1.VESTIMENTA: qué ponerse\n",
+              "role": "model"
+            },
+            {
+              "content": "={{ $json.toon }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        -256
+      ],
+      "id": "80fc5fb3-e9ae-4887-a238-e40820ac58b9",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "hRSLUVyWeOYVen4S",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const t  = $input.first().json.current.temperature_2m;\nconst at = $input.first().json.current.apparent_temperature;\nconst h  = $input.first().json.current.relative_humidity_2m;\nconst d  = $input.first().json.current.is_day === 1 ? 'D' : 'N';\nconst r  = $input.first().json.current.rain;\nconst sh = $input.first().json.current.showers;\nconst sn = $input.first().json.current.snowfall;\nconst cc = $input.first().json.current.cloud_cover;\nconst ws = $input.first().json.current.wind_speed_10m;\nconst wg = $input.first().json.current.wind_gusts_10m;\n\nreturn [{\n  json: {\n    toon: `[T:${t}|AT:${at}|H:${h}|D:${d}|R:${r}|SH:${sh}|SN:${sn}|CC:${cc}|WS:${ws}|WG:${wg}]`\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -256
+      ],
+      "id": "a2211d4c-6b13-4856-becf-2b2fc71ccb21",
+      "name": "Filtrar y juntar datos hora/temp formato TOON"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    recommendedClothes: $input.first().json.content.parts[0].text,\n    weatherConditions: {\n      temperature:  $('DatosClima').first().json.current.temperature_2m,\n      feelsLike:    $('DatosClima').first().json.current.apparent_temperature,\n      humidity:     $('DatosClima').first().json.current.relative_humidity_2m,\n      rain:         $('DatosClima').first().json.current.rain,\n      showers:      $('DatosClima').first().json.current.showers,\n      snowfall:     $('DatosClima').first().json.current.snowfall,\n      cloudCover:   $('DatosClima').first().json.current.cloud_cover,\n      windSpeed:    $('DatosClima').first().json.current.wind_speed_10m,\n      windGusts:    $('DatosClima').first().json.current.wind_gusts_10m,\n      isDay:        $('DatosClima').first().json.current.is_day === 1\n    },\n    temperature: $('DatosClima').first().json.current.temperature_2m\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        -256
+      ],
+      "id": "dd98f924-520b-4306-8014-e547519bb032",
+      "name": "formatear a JSON"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=7.0622&longitude=-73.0864&hourly=temperature_2m&current=temperature_2m,apparent_temperature,relative_humidity_2m,is_day,rain,cloud_cover,wind_speed_10m,wind_gusts_10m,snowfall,showers",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -256,
+        -256
+      ],
+      "id": "40c68e71-9959-4f15-8fe4-952652376624",
+      "name": "DatosClima"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={\n  \"recommendedClothes\": \"={{ $json.recommendedClothes }}\",\n  \"weatherConditions\": \"={{ $json.weatherConditions }}\",\n  \"temperature\": \"={{ $json.temperature }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        512,
+        -256
+      ],
+      "id": "715f2201-8c7a-441c-92ba-bc4a6ef434c9",
+      "name": "POST"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "formatear a JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar y juntar datos hora/temp formato TOON": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "formatear a JSON": {
+      "main": [
+        [
+          {
+            "node": "POST",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DatosClima": {
+      "main": [
+        [
+          {
+            "node": "Filtrar y juntar datos hora/temp formato TOON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "13c42d4d-0678-477e-9b9d-6a29a2d97800",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7427f3190dc596c38bf01bbcac858c3c6fecace0344236ee0a8e86fdf14fb3bb"
+  },
+  "id": "W4EUddjCP3GWXr0f",
+  "tags": []
+}
