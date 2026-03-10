@@ -55,14 +55,15 @@ Custom configuration extending the project’s visual identity through **design 
 
 ---
 
-## File Architecture
+# File Architecture
 
+```
 ├── index.html 
 ├── src/
 │ └── main.js 
 ├── js/
 │ └── tailwind.config.js 
-
+```
 ---
 
 # Design System Configuration
